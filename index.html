@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PromptVid — AI Video Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #050810;
+  --surface: #0c0f1a;
+  --card: #111420;
+  --border: #1c2035;
+  --accent: #6c63ff;
+  --accent2: #ff6584;
+  --accent3: #43e8b0;
+  --text: #e2e4f0;
+  --muted: #5a6080;
+  --glow: rgba(108,99,255,0.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Cabinet Grotesk',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* BG EFFECTS */
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(108,99,255,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(255,101,132,0.06) 0%,transparent 60%);pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(108,99,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(108,99,255,0.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:36px 20px 80px;}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:56px;animation:fadeDown 0.6s ease both;}
+.logo{font-family:'Clash Display',sans-serif;font-weight:700;font-size:1.6rem;letter-spacing:-1px;}
+.logo em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.free-tag{background:rgba(67,232,176,0.12);border:1px solid rgba(67,232,176,0.25);color:var(--accent3);font-size:0.72rem;font-weight:700;padding:5px 12px;border-radius:20px;letter-spacing:1px;text-transform:uppercase;}
+
+/* HERO */
+.hero{text-align:center;margin-bottom:48px;animation:fadeUp 0.7s ease 0.1s both;}
+.hero-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:0.78rem;padding:6px 16px;border-radius:30px;margin-bottom:24px;}
+.hero-pill span{width:6px;height:6px;border-radius:50%;background:var(--accent3);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+.hero h1{font-family:'Clash Display',sans-serif;font-size:clamp(2rem,5.5vw,3.5rem);font-weight:700;line-height:1.1;letter-spacing:-2px;margin-bottom:16px;}
+.hero h1 .g1{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero h1 .g2{background:linear-gradient(90deg,var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{color:var(--muted);font-size:1rem;max-width:480px;margin:0 auto;line-height:1.7;}
+
+/* HOW IT WORKS */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;animation:fadeUp 0.7s ease 0.15s both;}
+@media(max-width:580px){.how{grid-template-columns:1fr;}}
+.how-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;align-items:flex-start;gap:12px;}
+.how-num{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-weight:700;font-size:0.82rem;color:#fff;flex-shrink:0;}
+.how-card h4{font-size:0.85rem;font-weight:600;margin-bottom:3px;}
+.how-card p{font-size:0.78rem;color:var(--muted);line-height:1.5;}
+
+/* API SETUP */
+.setup{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 28px;margin-bottom:24px;animation:fadeUp 0.7s ease 0.2s both;}
+.setup summary{font-family:'Clash Display',sans-serif;font-weight:600;font-size:0.98rem;cursor:pointer;display:flex;align-items:center;gap:10px;list-style:none;user-select:none;}
+.setup summary::marker{display:none;}
+.setup summary .arr{margin-left:auto;color:var(--muted);transition:transform 0.3s;font-size:1.1rem;}
+details[open] .arr{transform:rotate(180deg);}
+.setup-body{margin-top:20px;}
+.field-label{font-size:0.8rem;font-weight:500;color:var(--muted);margin-bottom:8px;}
+.api-row{display:flex;gap:10px;}
+@media(max-width:500px){.api-row{flex-direction:column;}}
+.api-inp{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-family:'Cabinet Grotesk',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+.api-inp:focus{border-color:var(--accent);}
+.api-inp::placeholder{color:var(--muted);}
+.btn-save{background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:12px;padding:12px 20px;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;font-size:0.88rem;font-weight:500;transition:all 0.2s;white-space:nowrap;}
+.btn-save:hover{border-color:var(--accent);color:var(--accent);}
+.saved-ok{font-size:0.78rem;color:var(--accent3);margin-top:8px;display:none;}
+
+/* MAIN GEN */
+.gen{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:32px 28px;margin-bottom:24px;animation:fadeUp 0.7s ease 0.25s both;position:relative;overflow:hidden;}
+.gen::after{content:'';position:absolute;top:-80px;right:-80px;width:250px;height:250px;background:radial-gradient(circle,var(--glow),transparent 70%);pointer-events:none;}
+.gen-top{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.gen-ico{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.gen-top h2{font-family:'Clash Display',sans-serif;font-weight:600;font-size:1.15rem;}
+.gen-top p{font-size:0.8rem;color:var(--muted);}
+
+/* PROMPT */
+.prompt-wrap{position:relative;margin-bottom:18px;}
+.prompt-ta{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:16px 18px 50px;color:var(--text);font-family:'Cabinet Grotesk',sans-serif;font-size:0.98rem;line-height:1.65;resize:none;min-height:130px;outline:none;transition:border-color 0.25s;}
+.prompt-ta:focus{border-color:var(--accent);}
+.prompt-ta::placeholder{color:var(--muted);}
+.prompt-foot{position:absolute;bottom:12px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;}
+.char{font-size:0.73rem;color:var(--muted);}
+.btn-spark{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:0.76rem;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;transition:all 0.2s;display:flex;align-items:center;gap:5px;}
+.btn-spark:hover{border-color:var(--accent);color:var(--accent);}
+
+/* SETTINGS */
+.set-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:22px;}
+@media(max-width:600px){.set-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:400px){.set-row{grid-template-columns:1fr;}}
+.set-group{display:flex;flex-direction:column;gap:7px;}
+.styled-sel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:11px 14px;color:var(--text);font-family:'Cabinet Grotesk',sans-serif;font-size:0.88rem;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%235a6080' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:calc(100% - 12px) center;padding-right:32px;transition:border-color 0.2s;}
+.styled-sel:focus{border-color:var(--accent);}
+.styled-sel option{background:var(--card);}
+
+/* GENERATE BTN */
+.btn-gen{width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:14px;padding:17px;color:#fff;font-family:'Clash Display',sans-serif;font-weight:600;font-size:1.05rem;cursor:pointer;letter-spacing:0.2px;transition:opacity 0.2s,transform 0.15s,box-shadow 0.2s;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 8px 30px rgba(108,99,255,0.3);position:relative;overflow:hidden;}
+.btn-gen::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.12),transparent);}
+.btn-gen:hover:not(:disabled){opacity:0.9;transform:translateY(-2px);box-shadow:0 12px 40px rgba(108,99,255,0.4);}
+.btn-gen:disabled{opacity:0.45;cursor:not-allowed;transform:none;}
+
+/* PROGRESS */
+.out-section{display:none;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:28px;margin-bottom:24px;}
+.out-section.show{display:block;animation:fadeUp 0.4s ease both;}
+.out-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.out-head h3{font-family:'Clash Display',sans-serif;font-weight:600;font-size:1rem;display:flex;align-items:center;gap:8px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:blink 1.2s infinite;}
+.prog-track{background:var(--surface);border-radius:10px;height:5px;margin-bottom:14px;overflow:hidden;}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));width:0%;transition:width 0.6s ease;border-radius:10px;}
+.status{font-size:0.83rem;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:18px;}
+.spin{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* IMAGE GRID */
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:18px;}
+.img-slot{background:var(--surface);border:1px dashed var(--border);border-radius:12px;aspect-ratio:16/9;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;}
+.img-slot img{width:100%;height:100%;object-fit:cover;display:none;}
+.img-slot .slot-num{font-size:0.75rem;color:var(--muted);}
+.img-slot.loaded img{display:block;}
+.img-slot.loaded .slot-num{display:none;}
+
+/* VIDEO OUTPUT */
+.video-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;display:none;}
+.video-wrap.show{display:block;}
+.video-wrap canvas{width:100%;border-radius:16px;display:block;}
+
+/* DOWNLOAD BTN */
+.btn-dl{background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:9px 18px;font-size:0.82rem;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;transition:all 0.2s;display:none;align-items:center;gap:6px;text-decoration:none;}
+.btn-dl:hover{border-color:var(--accent3);color:var(--accent3);}
+.btn-dl.show{display:flex;}
+
+/* ERROR */
+.err{background:rgba(255,101,132,0.07);border:1px solid rgba(255,101,132,0.2);border-radius:12px;padding:14px 18px;font-size:0.85rem;color:#ff8fa3;display:none;line-height:1.6;}
+.err.show{display:block;}
+
+/* TIPS */
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;animation:fadeUp 0.7s ease 0.35s both;}
+.tip{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;transition:border-color 0.2s,transform 0.2s;}
+.tip:hover{border-color:var(--accent);transform:translateY(-2px);}
+.tip-ico{font-size:1.4rem;margin-bottom:10px;}
+.tip h4{font-size:0.86rem;font-weight:600;margin-bottom:5px;}
+.tip p{font-size:0.78rem;color:var(--muted);line-height:1.55;}
+
+footer{text-align:center;color:var(--muted);font-size:0.78rem;margin-top:56px;animation:fadeUp 0.7s ease 0.4s both;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">Prompt<em>Vid</em></div>
+  <div class="free-tag">✦ 100% Free</div>
+</header>
+
+<div class="hero">
+  <div class="hero-pill"><span></span> Powered by Stable Diffusion AI</div>
+  <h1>Type a prompt.<br><span class="g1">AI creates images.</span><br><span class="g2">We make your video.</span></h1>
+  <p>Your prompt → multiple AI images → compiled into a beautiful video. Works every time, completely free!</p>
+</div>
+
+<div class="how">
+  <div class="how-card">
+    <div class="how-num">1</div>
+    <div><h4>You Type a Prompt</h4><p>Describe any scene, story or idea you want</p></div>
+  </div>
+  <div class="how-card">
+    <div class="how-num">2</div>
+    <div><h4>AI Generates Images</h4><p>Stable Diffusion creates beautiful frames</p></div>
+  </div>
+  <div class="how-card">
+    <div class="how-num">3</div>
+    <div><h4>We Build Your Video</h4><p>Images are compiled into a smooth video</p></div>
+  </div>
+</div>
+
+<!-- API SETUP -->
+<details class="setup">
+  <summary>🔑 First time? Add your free API key here <span class="arr">▼</span></summary>
+  <div class="setup-body">
+    <div class="field-label">Your Hugging Face API Token (starts with hf_...)</div>
+    <div class="api-row">
+      <input class="api-inp" type="password" id="apiKey" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"/>
+      <button class="btn-save" onclick="saveKey()">Save Key</button>
+    </div>
+    <div class="saved-ok" id="savedOk">✅ Key saved! You are ready to generate videos.</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-top:12px;line-height:1.6;">Don't have a key? Go to <strong style="color:var(--text)">huggingface.co</strong> → Sign Up free → Settings → Access Tokens → New Token → Copy it here!</p>
+  </div>
+</details>
+
+<!-- GENERATOR -->
+<div class="gen">
+  <div class="gen-top">
+    <div class="gen-ico">🎬</div>
+    <div>
+      <h2>AI Video Generator</h2>
+      <p>Describe your video — the more detail, the better!</p>
+    </div>
+  </div>
+
+  <div class="prompt-wrap">
+    <textarea class="prompt-ta" id="prompt" placeholder="A majestic lion walking through golden savanna grass at sunset, cinematic lighting, dramatic sky, 4K quality, National Geographic style..." oninput="updateChar()" maxlength="400"></textarea>
+    <div class="prompt-foot">
+      <span class="char"><span id="cc">0</span>/400</span>
+      <button class="btn-spark" onclick="spark()">✦ Inspire me</button>
+    </div>
+  </div>
+
+  <div class="set-row">
+    <div class="set-group">
+      <div class="field-label">🎨 Style</div>
+      <select class="styled-sel" id="style">
+        <option value="cinematic, dramatic lighting, film quality">🎬 Cinematic</option>
+        <option value="anime style, vibrant colors, detailed">✨ Anime</option>
+        <option value="photorealistic, 8K, lifelike">📷 Realistic</option>
+        <option value="oil painting, artistic, masterpiece">🎨 Artistic</option>
+        <option value="fantasy, magical, ethereal, epic">🔮 Fantasy</option>
+        <option value="cyberpunk, neon lights, futuristic city">🌃 Cyberpunk</option>
+      </select>
+    </div>
+    <div class="set-group">
+      <div class="field-label">🖼️ Frames</div>
+      <select class="styled-sel" id="frames">
+        <option value="4">4 frames (fast)</option>
+        <option value="6" selected>6 frames (good)</option>
+        <option value="8">8 frames (best)</option>
+      </select>
+    </div>
+    <div class="set-group">
+      <div class="field-label">⏱️ Speed</div>
+      <select class="styled-sel" id="speed">
+        <option value="800">Slow (cinematic)</option>
+        <option value="500" selected>Normal</option>
+        <option value="300">Fast</option>
+        <option value="200">Very Fast</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn-gen" id="genBtn" onclick="generate()">
+    <span id="btnIco">🚀</span>
+    <span id="btnTxt">Generate My Video</span>
+  </button>
+</div>
+
+<!-- OUTPUT -->
+<div class="out-section" id="outSec">
+  <div class="out-head">
+    <h3><span class="dot" id="dot"></span> <span id="outTitle">Generating...</span></h3>
+    <a class="btn-dl" id="dlBtn" href="#" download="promptvid.gif">⬇ Download Video</a>
+  </div>
+  <div class="prog-track"><div class="prog-bar" id="prog"></div></div>
+  <div class="status" id="statusWrap">
+    <span class="spin" id="spin"></span>
+    <span id="statusTxt">Starting AI image generation...</span>
+  </div>
+  <div class="err" id="errBox"></div>
+
+  <!-- IMAGE FRAMES GRID -->
+  <div class="img-grid" id="imgGrid"></div>
+
+  <!-- VIDEO CANVAS -->
+  <div class="video-wrap" id="videoWrap">
+    <canvas id="canvas"></canvas>
+  </div>
+</div>
+
+<!-- TIPS -->
+<div class="tips">
+  <div class="tip"><div class="tip-ico">✍️</div><h4>Be Descriptive</h4><p>Include scene, lighting, mood, camera angle and style for stunning results.</p></div>
+  <div class="tip"><div class="tip-ico">⏱️</div><h4>Be Patient</h4><p>Each frame takes 15-30 seconds. More frames = longer wait but better video!</p></div>
+  <div class="tip"><div class="tip-ico">🔁</div><h4>Try Different Styles</h4><p>Same prompt with different styles gives completely different results!</p></div>
+  <div class="tip"><div class="tip-ico">💾</div><h4>Download & Share</h4><p>Click the download button to save your video as a GIF and share anywhere!</p></div>
+</div>
+
+<footer>Built with ❤️ using Stable Diffusion · PromptVid is 100% free · No data stored · Works on mobile too!</footer>
+</div>
+
+<script>
+const SPARKS = [
+  "A majestic lion walking through golden savanna at sunset, cinematic, dramatic sky",
+  "Cherry blossoms falling in a Japanese garden, soft morning light, peaceful",
+  "A futuristic city at night with neon lights and flying cars, cyberpunk",
+  "Giant ocean waves crashing on rocky cliffs, aerial view, stormy sky",
+  "A cozy fireplace in a winter cabin, snow outside, warm golden light",
+  "An astronaut floating in space near a colorful nebula, realistic",
+  "A magical forest with glowing mushrooms and fairies, fantasy, ethereal light",
+  "Mountain peaks above the clouds at golden hour, epic landscape",
+  "A dragon flying over a medieval castle, fantasy, dramatic lighting",
+  "Northern lights over a snowy tundra, stars reflecting on ice"
+];
+
+let apiKey = localStorage.getItem('pvid_key') || '';
+let running = false;
+const images = [];
+
+window.onload = () => {
+  if(apiKey){ document.getElementById('apiKey').value = apiKey; document.getElementById('savedOk').style.display='block'; }
+};
+
+function saveKey(){
+  const k = document.getElementById('apiKey').value.trim();
+  if(!k){ alert('Please enter your API key!'); return; }
+  apiKey = k;
+  localStorage.setItem('pvid_key', k);
+  document.getElementById('savedOk').style.display = 'block';
+}
+
+function updateChar(){ document.getElementById('cc').textContent = document.getElementById('prompt').value.length; }
+function spark(){ document.getElementById('prompt').value = SPARKS[Math.floor(Math.random()*SPARKS.length)]; updateChar(); }
+
+function setStatus(pct, msg){
+  document.getElementById('prog').style.width = pct + '%';
+  document.getElementById('statusTxt').textContent = msg;
+}
+
+function showError(msg){
+  const e = document.getElementById('errBox');
+  e.textContent = msg; e.classList.add('show');
+  document.getElementById('spin').style.display = 'none';
+  document.getElementById('dot').style.background = '#ff6584';
+  document.getElementById('outTitle').textContent = 'Error — Please Try Again';
+}
+
+async function fetchImage(prompt, retries=3){
+  for(let i=0; i<retries; i++){
+    try{
+      const res = await fetch('https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1', {
+        method:'POST',
+        headers:{ Authorization:`Bearer ${apiKey}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ inputs: prompt, parameters:{ num_inference_steps:20, guidance_scale:7.5 } })
+      });
+
+      if(res.status === 503){
+        // Model loading
+        setStatus(null, `Model warming up, waiting 15 seconds... (attempt ${i+1}/${retries})`);
+        await new Promise(r=>setTimeout(r,15000));
+        continue;
+      }
+
+      if(!res.ok){
+        const err = await res.json().catch(()=>({}));
+        if(i === retries-1) throw new Error(err.error || `HTTP ${res.status}`);
+        await new Promise(r=>setTimeout(r,5000));
+        continue;
+      }
+
+      const blob = await res.blob();
+      return URL.createObjectURL(blob);
+    } catch(e){
+      if(i===retries-1) throw e;
+      await new Promise(r=>setTimeout(r,3000));
+    }
+  }
+}
+
+function buildPrompts(base, style, count){
+  const variations = [
+    '', 'close up view,', 'wide angle shot,', 'aerial view,',
+    'detailed shot,', 'dramatic angle,', 'panoramic view,', 'artistic composition,'
+  ];
+  return Array.from({length:count}, (_,i) => `${variations[i]||''} ${base}, ${style}, high quality, detailed, sharp`);
+}
+
+async function generate(){
+  if(running) return;
+  const prompt = document.getElementById('prompt').value.trim();
+  const style = document.getElementById('style').value;
+  const frameCount = parseInt(document.getElementById('frames').value);
+  const speed = parseInt(document.getElementById('speed').value);
+
+  if(!prompt){ alert('Please describe your video first!'); return; }
+  if(!apiKey){ alert('Please add your Hugging Face API key first! Click the "First time?" section above.'); return; }
+
+  running = true;
+  images.length = 0;
+
+  // UI reset
+  document.getElementById('errBox').classList.remove('show');
+  document.getElementById('dlBtn').classList.remove('show');
+  document.getElementById('videoWrap').classList.remove('show');
+  document.getElementById('dot').style.background = 'var(--accent2)';
+  document.getElementById('dot').style.animation = 'blink 1.2s infinite';
+  document.getElementById('outTitle').textContent = 'Generating your video...';
+  document.getElementById('spin').style.display = 'block';
+  document.getElementById('prog').style.width = '0%';
+  document.getElementById('prog').style.background = 'linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3))';
+
+  // Build image slots
+  const grid = document.getElementById('imgGrid');
+  grid.innerHTML = '';
+  for(let i=0;i<frameCount;i++){
+    const slot = document.createElement('div');
+    slot.className = 'img-slot';
+    slot.id = `slot${i}`;
+    slot.innerHTML = `<span class="slot-num">Frame ${i+1}</span><img id="img${i}" src="" alt="Frame ${i+1}"/>`;
+    grid.appendChild(slot);
+  }
+
+  const sec = document.getElementById('outSec');
+  sec.classList.add('show');
+  sec.scrollIntoView({behavior:'smooth', block:'start'});
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  document.getElementById('btnTxt').textContent = 'Generating...';
+  document.getElementById('btnIco').textContent = '⏳';
+
+  const prompts = buildPrompts(prompt, style, frameCount);
+
+  try{
+    for(let i=0; i<frameCount; i++){
+      const pct = Math.round((i/frameCount)*80);
+      setStatus(pct, `Generating frame ${i+1} of ${frameCount}... (this takes about 20-30 seconds per frame)`);
+
+      const url = await fetchImage(prompts[i]);
+      images.push(url);
+
+      // Show image in slot
+      const imgEl = document.getElementById(`img${i}`);
+      imgEl.src = url;
+      document.getElementById(`slot${i}`).classList.add('loaded');
+    }
+
+    setStatus(85, 'All frames ready! Building your video...');
+    await new Promise(r=>setTimeout(r,500));
+
+    // BUILD VIDEO as animated canvas → GIF-like playback
+    await buildVideo(images, speed);
+
+    setStatus(100, '🎉 Your video is ready!');
+    document.getElementById('spin').style.display = 'none';
+    document.getElementById('dot').style.animation = 'none';
+    document.getElementById('dot').style.background = '#43e8b0';
+    document.getElementById('outTitle').textContent = '🎉 Your Video is Ready!';
+
+  } catch(err){
+    showError(`❌ Error: ${err.message}. Please check your API key or try again in a few minutes.`);
+  } finally {
+    running = false;
+    btn.disabled = false;
+    document.getElementById('btnTxt').textContent = 'Generate My Video';
+    document.getElementById('btnIco').textContent = '🚀';
+  }
+}
+
+async function buildVideo(urls, frameDelay){
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const videoWrap = document.getElementById('videoWrap');
+
+  // Load all images
+  const imgs = await Promise.all(urls.map(url => new Promise((res,rej)=>{
+    const img = new Image();
+    img.onload = ()=>res(img);
+    img.onerror = rej;
+    img.src = url;
+  })));
+
+  // Set canvas size
+  canvas.width = imgs[0].naturalWidth || 512;
+  canvas.height = imgs[0].naturalHeight || 512;
+
+  videoWrap.classList.add('show');
+
+  // Animate frames in loop
+  let frame = 0;
+  let lastTime = 0;
+
+  function drawFrame(ts){
+    if(ts - lastTime >= frameDelay){
+      // Cross-fade effect
+      ctx.globalAlpha = 1;
+      ctx.drawImage(imgs[frame], 0, 0, canvas.width, canvas.height);
+      lastTime = ts;
+      frame = (frame+1) % imgs.length;
+    }
+    requestAnimationFrame(drawFrame);
+  }
+  requestAnimationFrame(drawFrame);
+
+  // Create downloadable GIF using canvas frames
+  makeDownloadable(canvas, imgs, frameDelay);
+}
+
+function makeDownloadable(canvas, imgs, delay){
+  // Create download as webm/gif using MediaRecorder
+  try{
+    const stream = canvas.captureStream(2);
+    const chunks = [];
+    const rec = new MediaRecorder(stream, {mimeType:'video/webm'});
+    rec.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+    rec.onstop = () => {
+      const blob = new Blob(chunks, {type:'video/webm'});
+      const url = URL.createObjectURL(blob);
+      const dl = document.getElementById('dlBtn');
+      dl.href = url;
+      dl.download = 'promptvid-video.webm';
+      dl.classList.add('show');
+    };
+    rec.start();
+    // Record for full loop duration
+    setTimeout(()=>rec.stop(), imgs.length * delay * 2 + 1000);
+  } catch(e){
+    // Fallback: just offer canvas snapshot
+    const dl = document.getElementById('dlBtn');
+    dl.href = canvas.toDataURL('image/png');
+    dl.download = 'promptvid-frame.png';
+    dl.classList.add('show');
+  }
+}
+</script>
+</body>
+</html>
